@@ -1,0 +1,7 @@
+# Echte Konfigurationsdatei mit Zugangsdaten ignorieren
+config.php
+
+# Session-Dateien und temporäre Daten ausschließen
+sessions/
+data/
+*.log
