@@ -50,11 +50,8 @@ Ein schlankes, responsives PHP-Web-Interface zur Verwaltung und Überwachung von
     Stelle sicher, dass der Webserver Schreibrechte auf die Verzeichnisse sessions/ und data/ besitzt:
     ```bash
     sudo chown -R www-data:www-data sessions/ data/
-    ```bash
     sudo chmod -R 775 sessions/ data/
 
-    
-    
-    
+
     ## Lizenz
     Dieses Projekt ist unter der GNU General Public License v3 lizenziert – siehe die [LICENSE](LICENSE) Datei für Details.
