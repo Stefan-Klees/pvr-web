@@ -52,5 +52,5 @@ Ein schlankes, responsives PHP-Web-Interface zur Verwaltung und Überwachung von
     sudo chown -R www-data:www-data sessions/ data/
     sudo chmod -R 775 sessions/ data/
 
-5.  **Lizenz**
+5.  **Lizenz:**
     Dieses Projekt ist unter der GNU General Public License v3 lizenziert – siehe die [LICENSE](LICENSE) Datei für Details.
