@@ -30,13 +30,13 @@ Ein schlankes, responsives PHP-Web-Interface zur Verwaltung und Überwachung von
    git clone [https://github.com/Stefan-Klees/pvr-web.git](https://github.com/Stefan-Klees/pvr-web.git) /var/www/pvr
    cd /var/www/pvr
 
-2.  **Konfiguration erstellen:
+2. **Konfiguration erstellen:**
     Kopiere die Vorlage und trage deine Zugangsdaten ein:
 
     cp config.example.php config.php
     nano config.php
 
-3.  **Parameter anpassen:
+3. **Parameter anpassen:**
 
     TVH_HOST: URL/IP deines TVHeadend-Servers (z. B. http://127.0.0.1:9981)
 
@@ -46,15 +46,15 @@ Ein schlankes, responsives PHP-Web-Interface zur Verwaltung und Überwachung von
 
     AUTH_SECRET: Beliebige zufällige Zeichenkette für Tokens
 
-4.  **Berechtigungen setzen:
+4.  **Berechtigungen setzen:**
     Stelle sicher, dass der Webserver Schreibrechte auf die Verzeichnisse sessions/ und data/ besitzt:
 
     sudo chown -R www-data:www-data sessions/ data/
+    
     sudo chmod -R 775 sessions/ data/
 
     
     
     
     ## Lizenz
-
-   Dieses Projekt ist unter der GNU General Public License v3 lizenziert – siehe die [LICENSE](LICENSE) Datei für Details.
+    Dieses Projekt ist unter der GNU General Public License v3 lizenziert – siehe die [LICENSE](LICENSE) Datei für Details.
