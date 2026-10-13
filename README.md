@@ -48,9 +48,9 @@ Ein schlankes, responsives PHP-Web-Interface zur Verwaltung und Überwachung von
 
 4.  **Berechtigungen setzen:**
     Stelle sicher, dass der Webserver Schreibrechte auf die Verzeichnisse sessions/ und data/ besitzt:
-
+    ```bash
     sudo chown -R www-data:www-data sessions/ data/
-    
+    ```bash
     sudo chmod -R 775 sessions/ data/
 
     
