@@ -151,211 +151,7 @@ if ($limitParam > 0) {$entries = array_slice($filteredEntries, 0,$limitParam);
 }
 ?>
 
-<style>
-    .filter-bar {
-        background: var(--card, #1e1e1e);
-        padding: 15px 20px;
-        border-radius: 12px;
-        margin-bottom: 20px;
-        border: 1px solid #2a2a2a;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 15px;
-        align-items: center;
-        justify-content: space-between;
-    }
 
-    .filter-group {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
-    }
-
-    .filter-control {
-        background: #141414;
-        border: 1px solid #3a3a3a;
-        color: #fff;
-        padding: 8px 12px;
-        border-radius: 8px;
-        font-size: 0.9em;
-        outline: none;
-    }
-
-    .filter-btn {
-        background: var(--accent, #00adb5);
-        color: #fff;
-        border: none;
-        padding: 8px 16px;
-        border-radius: 8px;
-        font-weight: 600;
-        cursor: pointer;
-    }
-
-    .reset-link { color: #888; text-decoration: none; font-size: 0.85em; }
-    .reset-link:hover { color: #fff; }
-
-    .table-container {
-        width: 100%;
-        overflow-x: auto;
-        background: var(--card, #1e1e1e);
-        border-radius: 12px;
-        border: 1px solid #2a2a2a;
-    }
-
-    .pvr-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95em; }
-    .pvr-table th {
-        background: #252525;
-        color: var(--accent, #00adb5);
-        padding: 14px 16px;
-        font-weight: 600;
-        font-size: 0.8em;
-        text-transform: uppercase;
-        border-bottom: 2px solid #333;
-    }
-
-    .pvr-table td { padding: 14px 16px; border-bottom: 1px solid #2a2a2a; color: #ddd; vertical-align: middle; }
-    .pvr-table tbody tr:hover { background: rgba(0, 173, 181, 0.05); }
-
-    .channel-badge {
-        background: #2a2a2a; color: #fff; padding: 4px 8px; border-radius: 6px;
-        font-size: 0.85em; font-weight: 500; border: 1px solid #3a3a3a; white-space: nowrap;
-    }
-
-    .live-badge {
-        background: #2ea44f; color: #fff; padding: 2px 6px; border-radius: 4px;
-        font-size: 0.75em; font-weight: bold; margin-left: 6px; text-transform: uppercase;
-    }
-
-    .action-group {
-        display: flex;
-        gap: 8px;
-        justify-content: flex-end;
-        align-items: center;
-    }
-
-    .btn-info {
-        background: #2a2a2a;
-        color: #00adb5;
-        border: 1px solid #00adb5;
-        padding: 8px 12px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 0.85em;
-        font-weight: bold;
-        transition: all 0.2s;
-    }
-
-    .btn-info:hover {
-        background: #00adb5;
-        color: #fff;
-    }
-
-    .btn-record {
-        background: #e63946;
-        color: #fff;
-        border: 1px solid #e63946;
-        padding: 8px 14px;
-        border-radius: 6px;
-        text-decoration: none;
-        font-size: 0.85em;
-        font-weight: bold;
-        white-space: nowrap;
-        display: inline-block;
-    }
-
-    .btn-record:hover { background: #b82e38; }
-
-    .btn-record-cancel {
-        background: #3a3a3a;
-        color: #ff4d4d;
-        border: 1px solid #ff4d4d;
-        padding: 8px 14px;
-        border-radius: 6px;
-        text-decoration: none;
-        font-size: 0.85em;
-        font-weight: bold;
-        transition: all 0.2s ease;
-        white-space: nowrap;
-        display: inline-block;
-    }
-
-    .btn-record-cancel:hover {
-        background: #ff4d4d;
-        color: #fff;
-    }
-
-    .btn-live-stream {
-        background: #00adb5;
-        color: #fff;
-        border: 1px solid #00adb5;
-        padding: 8px 14px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 0.85em;
-        font-weight: bold;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        transition: all 0.2s ease;
-    }
-
-    .btn-live-stream:hover {
-        background: #00848a;
-        border-color: #00848a;
-        box-shadow: 0 2px 10px rgba(0, 173, 181, 0.4);
-    }
-
-    /* Modal / Pop-up Styles */
-    .modal-backdrop {
-        display: none;
-        position: fixed;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0, 0, 0, 0.7);
-        backdrop-filter: blur(3px);
-        z-index: 1000;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .modal-card {
-        background: #1e1e1e;
-        border: 1px solid #333;
-        border-radius: 12px;
-        max-width: 600px;
-        width: 90%;
-        max-height: 80vh;
-        overflow-y: auto;
-        padding: 24px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        position: relative;
-    }
-
-    .modal-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        border-bottom: 1px solid #333;
-        padding-bottom: 12px;
-        margin-bottom: 15px;
-    }
-
-    .modal-title { font-size: 1.2em; font-weight: bold; color: #fff; }
-    .modal-close { background: none; border: none; color: #888; font-size: 1.4em; cursor: pointer; }
-    .modal-close:hover { color: #fff; }
-    .modal-body { color: #ccc; font-size: 0.95em; line-height: 1.5; }
-    .modal-meta { font-size: 0.85em; color: #00adb5; margin-bottom: 10px; }
-
-    .modal-footer {
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-        margin-top: 20px;
-        padding-top: 15px;
-        border-top: 1px solid #333;
-        flex-wrap: wrap;
-    }
-</style>
 
 <h3 style="margin-bottom: 15px;">Programmübersicht (EPG)</h3>
 
@@ -480,6 +276,8 @@ if ($limitParam > 0) {$entries = array_slice($filteredEntries, 0,$limitParam);
                             <?php endif; ?>
                         </td>
                         <td style="text-align: right;">
+
+
                             <div class="action-group">
                                 <button type="button" class="btn-info" 
                                         data-eventid="<?= $eventId ?>"
@@ -496,20 +294,23 @@ if ($limitParam > 0) {$entries = array_slice($filteredEntries, 0,$limitParam);
                                         data-isscheduled="<?= $isScheduled ? '1' : '0' ?>"
                                         data-dvruuid="<?= htmlspecialchars($dvrUuid) ?>"
                                         data-recordurl="<?= htmlspecialchars($recordUrl) ?>"
+                                        title="Sendungsdetails anzeigen"
                                         onclick="openInfoModal(this)">
-                                    ℹ Info
+                                    ℹ
                                 </button>
 
                                 <?php if ($isScheduled): ?>
-                                    <a href="edit/record_delete.php?uuid=<?= urlencode($dvrUuid) ?>" class="btn-record-cancel">
-                                        🗑 Aufnahme löschen
+                                    <a href="edit/record_delete.php?uuid=<?= urlencode($dvrUuid) ?>" class="btn-record-cancel" title="Timer / Aufnahme löschen">
+                                        🗑
                                     </a>
                                 <?php else: ?>
-                                    <a href="<?= $recordUrl ?>" class="btn-record">
-                                        ⏺ Aufnehmen
+                                    <a href="<?= $recordUrl ?>" class="btn-record" title="Sendung zur Aufnahme vormerken">
+                                        ⏺
                                     </a>
                                 <?php endif; ?>
-                            </div>
+                            </div>                        
+
+
                         </td>
                     </tr>
                 <?php endforeach; ?>

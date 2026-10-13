@@ -13,6 +13,10 @@ $page = $_GET['page'] ?? 'epg';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Street68 PVR Manager</title>
+
+    
+    <link rel="stylesheet" href="/css/style.css?v=2">
+
     <style>
         :root { --bg: #121212; --card: #1e1e1e; --accent: #00adb5; --text: #eeeeee; }
         body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; }
