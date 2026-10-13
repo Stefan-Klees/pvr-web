@@ -3,17 +3,17 @@
 date_default_timezone_set('Europe/Berlin');
 
 $api = new TVHeadendAPI();
-$upcomingData = $api->getUpcoming();
-$entries = $upcomingData['entries'] ?? [];
+$upcomingData =$api->getUpcoming();
+$entries =$upcomingData['entries'] ?? [];
 
 $now = time();
 
 // Chronologisch nach Startzeit (Aufnahmedatum) aufsteigend sortieren
 if (!empty($entries)) {
-    usort($entries, function ($a, $b) {
+    usort($entries, function ($a,$b) {
         $startA = (int)($a['start'] ?? 0);
         $startB = (int)($b['start'] ?? 0);
-        return $startA <=> $startB;
+        return $startA <=>$startB;
     });
 }
 
@@ -21,16 +21,14 @@ if (!empty($entries)) {
 $overlappingUuids = [];
 $count = count($entries);
 for ($i = 0; $i < $count; $i++) {
-    $startI = (int)($entries[$i]['start'] ?? 0);
-    $stopI  = (int)($entries[$i]['stop'] ?? 0);
-    $uuidI  = $entries[$i]['uuid'] ?? (string)$i;
+    $startI = (int)($entries[$i]['start'] ?? 0);$stopI  = (int)($entries[$i]['stop'] ?? 0);
+    $uuidI  =$entries[$i]['uuid'] ?? (string)$i;
 
     for ($j = $i + 1; $j < $count; $j++) {
-        $startJ = (int)($entries[$j]['start'] ?? 0);
-        $stopJ  = (int)($entries[$j]['stop'] ?? 0);
-        $uuidJ  = $entries[$j]['uuid'] ?? (string)$j;
+        $startJ = (int)($entries[$j]['start'] ?? 0);$stopJ  = (int)($entries[$j]['stop'] ?? 0);
+        $uuidJ  =$entries[$j]['uuid'] ?? (string)$j;
 
-        if ($startI < $stopJ && $startJ < $stopI) {
+        if ($startI <$stopJ && $startJ <$stopI) {
             $overlappingUuids[$uuidI] = true;
             $overlappingUuids[$uuidJ] = true;
         }
@@ -178,22 +176,25 @@ for ($i = 0; $i < $count; $i++) {
         margin-bottom: 2px;
     }
 
-    .btn-cancel {
-        background: rgba(230, 57, 70, 0.15);
-        color: #ff4d4d;
-        border: 1px solid #e63946;
-        padding: 8px 14px;
+    .btn-delete-action {
+        background: #2a1517;
+        color: #ff5252;
+        border: 1px solid #5a2022;
+        padding: 6px 12px;
         border-radius: 6px;
-        text-decoration: none;
+        cursor: pointer;
         font-size: 0.85em;
         font-weight: bold;
-        display: inline-block;
         transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
     }
 
-    .btn-cancel:hover {
-        background: #e63946;
+    .btn-delete-action:hover {
+        background: #ff5252;
         color: #fff;
+        border-color: #ff5252;
     }
 </style>
 
@@ -209,46 +210,36 @@ for ($i = 0; $i < $count; $i++) {
                 <th style="text-align: right;">Aktion</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody id="upcomingTableBody">
             <?php if (empty($entries)): ?>
-                <tr>
+                <tr id="row-empty">
                     <td colspan="4" style="text-align: center; padding: 25px; color: #777;">
                         Aktuell keine geplante Aufnahmen vorhanden.
                     </td>
                 </tr>
             <?php else: ?>
-                <?php foreach ($entries as $index => $timer): ?>
+                <?php foreach ($entries as $index =>$timer): ?>
                     <?php 
                         $title = htmlspecialchars($timer['disp_title'] ?? ($timer['title']['ger'] ?? ($timer['title'] ?? 'Aufnahme')));
-                        $subtitle = htmlspecialchars($timer['disp_extratext'] ?? ($timer['disp_subtitle'] ?? ($timer['extra'] ?? ($timer['subtitle'] ?? ''))));
-                        
-                        // Textauflösung: Bevorzuge comment, falls disp_description leer ist
-                        $rawDesc = !empty($timer['comment']) ? $timer['comment'] : (!empty($timer['disp_description']) ? $timer['disp_description'] : ($timer['description'] ?? ''));
-                        $description = htmlspecialchars($rawDesc);
-                        
-                        $channel = htmlspecialchars($timer['channelname'] ?? ($timer['channel_name'] ?? 'Kanal'));
+                        $subtitle = htmlspecialchars($timer['disp_extratext'] ?? ($timer['disp_subtitle'] ?? ($timer['extra'] ?? ($timer['subtitle'] ?? ''))));$rawDesc = !empty($timer['comment']) ?$timer['comment'] : (!empty($timer['disp_description']) ?$timer['disp_description'] : ($timer['description'] ?? ''));$description = htmlspecialchars($rawDesc);$channel = htmlspecialchars($timer['channelname'] ?? ($timer['channel_name'] ?? 'Kanal'));
                         
                         $startTimestamp = (int)($timer['start'] ?? 0);
                         $stopTimestamp  = (int)($timer['stop'] ?? 0);
 
-                        $dateStr   = date('d.m.Y', $startTimestamp);
-                        $startTime = date('H:i', $startTimestamp);
-                        $stopTime  = ($stopTimestamp > 0) ? date('H:i', $stopTimestamp) : '--:--';
+                        $dateStr   = date('d.m.Y', $startTimestamp);$startTime = date('H:i', $startTimestamp);$stopTime  = ($stopTimestamp > 0) ? date('H:i', $stopTimestamp) : '--:--';
 
                         $uuid = $timer['uuid'] ?? (string)$index;
 
-                        // Prüfen, ob die Aufnahme aktiv läuft:
                         $statusRaw = strtolower($timer['status'] ?? ($timer['sched_state'] ?? ''));
                         $isRecording = ($statusRaw === 'recording') || ($startTimestamp <= $now && $stopTimestamp > $now);
-
-                        // Prüfen, ob eine zeitliche Überschneidung vorliegt:
                         $isOverlap = isset($overlappingUuids[$uuid]);
 
+
                         $rowClasses = [];
-                        if ($isRecording) $rowClasses[] = 'is-recording';
-                        if ($isOverlap)   $rowClasses[] = 'is-overlap';
+                        if ($isRecording)$rowClasses[] = 'is-recording';
+                        if ($isOverlap)$rowClasses[] = 'is-overlap';
                     ?>
-                    <tr class="<?= implode(' ', $rowClasses) ?>">
+                    <tr id="row-<?= htmlspecialchars($uuid) ?>" class="<?= implode(' ', $rowClasses) ?>">
                         <td>
                             <span class="channel-badge"><?= $channel ?></span>
                         </td>
@@ -265,7 +256,7 @@ for ($i = 0; $i < $count; $i++) {
                             <?php if ($subtitle): ?>
                                 <div class="subtitle-cell"><?= $subtitle ?></div>
                             <?php endif; ?>
-                            <?php if ($description && $description !== $subtitle): ?>
+                            <?php if ($description && $description !==$subtitle): ?>
                                 <div class="description-cell"><?= $description ?></div>
                             <?php endif; ?>
                         </td>
@@ -274,9 +265,14 @@ for ($i = 0; $i < $count; $i++) {
                             <?= $startTime ?> - <?= $stopTime ?> Uhr
                         </td>
                         <td style="text-align: right;">
-                            <a href="edit/record_delete.php?uuid=<?= urlencode($uuid) ?>" class="btn-cancel" onclick="return confirm('<?= $isRecording ? 'Laufende Aufnahme wirklich abbrechen?' : 'Timer wirklich löschen?' ?>');">
-                                <?= $isRecording ? '⏹ Stoppen' : '✕ Stornieren' ?>
-                            </a>
+                            <button type="button" class="btn-delete-action"
+                                    data-uuid="<?= htmlspecialchars($uuid) ?>"
+                                    data-title="<?= $title ?>"
+                                    data-recording="<?= $isRecording ? '1' : '0' ?>"
+                                    title="<?= $isRecording ? 'Laufende Aufnahme abbrechen' : 'Timer löschen' ?>"
+                                    onclick="handleDeleteTimer(this)">
+                                <?= $isRecording ? '⏹ Stoppen' : '🗑' ?>
+                            </button>
                         </td>
                     </tr>
                 <?php endforeach; ?>
@@ -284,3 +280,64 @@ for ($i = 0; $i < $count; $i++) {
         </tbody>
     </table>
 </div>
+
+<script>
+function handleDeleteTimer(btn) {
+    const uuid = btn.getAttribute('data-uuid');
+    const title = btn.getAttribute('data-title') || 'diesen Timer';
+    const isRecording = btn.getAttribute('data-recording') === '1';
+
+    const promptText = isRecording
+        ? `Die Aufnahme "${title}" läuft gerade.\nMöchtest du sie wirklich vorzeitig stoppen und löschen?`
+        : `Möchtest du den Timer für "${title}" wirklich löschen?`;
+
+    if (!confirm(promptText)) {
+        return;
+    }
+
+    btn.disabled = true;
+    btn.style.opacity = '0.5';
+
+    const formData = new FormData();
+    formData.append('uuid', uuid);
+
+    fetch('edit/record_delete.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            const row = document.getElementById('row-' + uuid);
+            if (row) {
+                row.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                row.style.opacity = '0';
+                row.style.transform = 'translateX(20px)';
+                setTimeout(() => {
+                    row.remove();
+                    const tbody = document.getElementById('upcomingTableBody');
+                    if (tbody && tbody.querySelectorAll('tr').length === 0) {
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="4" style="text-align: center; padding: 25px; color: #777;">
+                                    Aktuell keine geplante Aufnahmen vorhanden.
+                                </td>
+                            </tr>
+                        `;
+                    }
+                }, 300);
+            }
+        } else {
+            alert('Fehler beim Löschen: ' + (data.error || 'Unbekannter Fehler'));
+            btn.disabled = false;
+            btn.style.opacity = '1';
+        }
+    })
+    .catch(err => {
+        alert('Netzwerk- oder Serverfehler beim Löschen.');
+        console.error(err);
+        btn.disabled = false;
+        btn.style.opacity = '1';
+    });
+}
+</script>

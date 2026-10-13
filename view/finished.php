@@ -3,15 +3,15 @@
 date_default_timezone_set('Europe/Berlin');
 
 $api = new TVHeadendAPI();
-$finishedData = $api->getFinished();
-$entries = $finishedData['entries'] ?? [];
+$finishedData =$api->getFinished();
+$entries =$finishedData['entries'] ?? [];
 
 // Neueste Aufnahmen zuerst (absteigend nach Startzeitpunkt sortieren)
 if (!empty($entries)) {
-    usort($entries, function ($a, $b) {
+    usort($entries, function ($a,$b) {
         $startA = (int)($a['start'] ?? 0);
         $startB = (int)($b['start'] ?? 0);
-        return $startB <=> $startA;
+        return $startB <=>$startA;
     });
 }
 ?>
@@ -87,7 +87,7 @@ if (!empty($entries)) {
         white-space: nowrap;
     }
 
-    .play-control-group {
+    .action-control-group {
         display: flex;
         align-items: center;
         justify-content: flex-end;
@@ -120,6 +120,24 @@ if (!empty($entries)) {
     .btn-play-action:hover {
         background: #00848a;
         border-color: #00848a;
+    }
+
+    .btn-delete-action {
+        background: #2a1517;
+        color: #ff5252;
+        border: 1px solid #5a2022;
+        padding: 6px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.85em;
+        font-weight: bold;
+        transition: all 0.2s ease;
+    }
+
+    .btn-delete-action:hover {
+        background: #ff5252;
+        color: #fff;
+        border-color: #ff5252;
     }
 
     .modal-backdrop {
@@ -202,19 +220,17 @@ if (!empty($entries)) {
                 <th style="text-align: right;">Aktion</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody id="finishedTableBody">
             <?php if (empty($entries)): ?>
-                <tr>
+                <tr id="row-empty">
                     <td colspan="5" style="text-align: center; padding: 25px; color: #777;">
                         Keine fertigen Aufnahmen im Archiv gefunden.
                     </td>
                 </tr>
             <?php else: ?>
-                <?php foreach ($entries as $item): ?>
+                <?php foreach ($entries as$item): ?>
                     <?php 
-                        $uuid = htmlspecialchars($item['uuid'] ?? '');
-                        $title = htmlspecialchars($item['disp_title'] ?? 'Unbekannt');
-                        $subtitle = htmlspecialchars($item['disp_extratext'] ?? ($item['disp_subtitle'] ?? ''));
+                        $uuid = htmlspecialchars($item['uuid'] ?? '');$title = htmlspecialchars($item['disp_title'] ?? 'Unbekannt');$subtitle = htmlspecialchars($item['disp_extratext'] ?? ($item['disp_subtitle'] ?? ''));
                         $channel = htmlspecialchars($item['channelname'] ?? 'Kanal');
                         $date = date('d.m.Y H:i', (int)($item['start'] ?? 0));
                         $duration = (int)($item['duration'] ?? 0);
@@ -227,14 +243,12 @@ if (!empty($entries)) {
                         }
 
                         // Relativen Pfad unter /var/radio/video/aufnahmen für Apache ermitteln
-                        $fullPath = $item['filename'] ?? ($item['path'] ?? ($item['files'][0]['filename'] ?? ''));
-                        $baseDir  = '/var/radio/video/aufnahmen/';
-                        $relPath  = '';
-                        if (str_starts_with($fullPath, $baseDir)) {
-                            $relPath = substr($fullPath, strlen($baseDir));
+                        $fullPath =$item['filename'] ?? ($item['path'] ?? ($item['files'][0]['filename'] ?? ''));
+                        $baseDir  = '/var/radio/video/aufnahmen/';$relPath  = '';
+                        if (str_starts_with($fullPath, $baseDir)) {$relPath = substr($fullPath, strlen($baseDir));
                         }
                     ?>
-                    <tr>
+                    <tr id="row-<?= $uuid ?>">
                         <td>
                             <span class="channel-badge"><?= $channel ?></span>
                         </td>
@@ -247,7 +261,7 @@ if (!empty($entries)) {
                         <td class="date-cell"><?= $date ?> Uhr</td>
                         <td class="size-cell"><?= $filesize ?></td>
                         <td style="text-align: right;">
-                            <div class="play-control-group">
+                            <div class="action-control-group">
                                 <select class="select-player" id="playerSelect_<?= $uuid ?>">
                                     <option value="vlc">VLC Player</option>
                                     <option value="web">Web-Player</option>
@@ -259,6 +273,13 @@ if (!empty($entries)) {
                                         data-duration="<?= $duration ?>"
                                         onclick="handlePlayAction(this)">
                                     ▶ Start
+                                </button>
+                                <button type="button" class="btn-delete-action"
+                                        data-uuid="<?= $uuid ?>"
+                                        data-title="<?= $title ?>"
+                                        title="Aufnahme löschen"
+                                        onclick="handleDeleteAction(this)">
+                                    🗑
                                 </button>
                             </div>
                         </td>
@@ -297,7 +318,6 @@ function handlePlayAction(btn) {
     const select = document.getElementById('playerSelect_' + uuid);
     const chosen = select ? select.value : 'vlc';
 
-    // Direkte Apache-URL für 100% natives Seeking
     let directStreamUrl = '';
     if (relPath !== '') {
         const parts = relPath.split('/').map(encodeURIComponent).join('/');
@@ -315,7 +335,6 @@ function handlePlayAction(btn) {
             const intentUrl = 'intent://' + rawUrl + '#Intent;package=org.videolan.vlc;type=video/*;scheme=' + protocol + ';end';
             window.location.href = intentUrl;
         } else {
-            // M3U Playlist mit Direktlink auf die statische Apache-Datei
             const durVal = (parseInt(duration, 10) > 0) ? duration : '-1';
             const m3uContent = "#EXTM3U\r\n#EXTINF:" + durVal + "," + title + "\r\n" + directStreamUrl + "\r\n";
             const blob = new Blob([m3uContent], { type: 'audio/x-mpegurl' });
@@ -329,6 +348,60 @@ function handlePlayAction(btn) {
     } else {
         openWebPlayer(directStreamUrl, title);
     }
+}
+
+function handleDeleteAction(btn) {
+    const uuid = btn.getAttribute('data-uuid');
+    const title = btn.getAttribute('data-title') || 'diese Aufnahme';
+
+    if (!confirm(`Möchtest du die Aufnahme "${title}" wirklich löschen?`)) {
+        return;
+    }
+
+    btn.disabled = true;
+    btn.style.opacity = '0.5';
+
+    const formData = new FormData();
+    formData.append('uuid', uuid);
+
+    fetch('edit/record_delete.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            const row = document.getElementById('row-' + uuid);
+            if (row) {
+                row.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                row.style.opacity = '0';
+                row.style.transform = 'translateX(20px)';
+                setTimeout(() => {
+                    row.remove();
+                    const tbody = document.getElementById('finishedTableBody');
+                    if (tbody && tbody.querySelectorAll('tr').length === 0) {
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="5" style="text-align: center; padding: 25px; color: #777;">
+                                    Keine fertigen Aufnahmen im Archiv gefunden.
+                                </td>
+                            </tr>
+                        `;
+                    }
+                }, 300);
+            }
+        } else {
+            alert('Fehler beim Löschen: ' + (data.error || 'Unbekannter Fehler'));
+            btn.disabled = false;
+            btn.style.opacity = '1';
+        }
+    })
+    .catch(err => {
+        alert('Netzwerk- oder Serverfehler beim Löschen.');
+        console.error(err);
+        btn.disabled = false;
+        btn.style.opacity = '1';
+    });
 }
 
 function openWebPlayer(url, title) {
