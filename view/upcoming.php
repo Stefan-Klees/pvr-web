@@ -3,17 +3,17 @@
 date_default_timezone_set('Europe/Berlin');
 
 $api = new TVHeadendAPI();
-$upcomingData =$api->getUpcoming();
-$entries =$upcomingData['entries'] ?? [];
+$upcomingData = $api->getUpcoming();
+$entries = $upcomingData['entries'] ?? [];
 
 $now = time();
 
 // Chronologisch nach Startzeit (Aufnahmedatum) aufsteigend sortieren
 if (!empty($entries)) {
-    usort($entries, function ($a,$b) {
+    usort($entries, function ($a, $b) {
         $startA = (int)($a['start'] ?? 0);
         $startB = (int)($b['start'] ?? 0);
-        return $startA <=>$startB;
+        return $startA <=> $startB;
     });
 }
 
@@ -21,14 +21,16 @@ if (!empty($entries)) {
 $overlappingUuids = [];
 $count = count($entries);
 for ($i = 0; $i < $count; $i++) {
-    $startI = (int)($entries[$i]['start'] ?? 0);$stopI  = (int)($entries[$i]['stop'] ?? 0);
-    $uuidI  =$entries[$i]['uuid'] ?? (string)$i;
+    $startI = (int)($entries[$i]['start'] ?? 0);
+    $stopI  = (int)($entries[$i]['stop'] ?? 0);
+    $uuidI  = $entries[$i]['uuid'] ?? (string)$i;
 
     for ($j = $i + 1; $j < $count; $j++) {
-        $startJ = (int)($entries[$j]['start'] ?? 0);$stopJ  = (int)($entries[$j]['stop'] ?? 0);
-        $uuidJ  =$entries[$j]['uuid'] ?? (string)$j;
+        $startJ = (int)($entries[$j]['start'] ?? 0);
+        $stopJ  = (int)($entries[$j]['stop'] ?? 0);
+        $uuidJ  = $entries[$j]['uuid'] ?? (string)$j;
 
-        if ($startI <$stopJ && $startJ <$stopI) {
+        if ($startI < $stopJ && $startJ < $stopI) {
             $overlappingUuids[$uuidI] = true;
             $overlappingUuids[$uuidJ] = true;
         }
@@ -56,15 +58,20 @@ for ($i = 0; $i < $count; $i++) {
                     </td>
                 </tr>
             <?php else: ?>
-                <?php foreach ($entries as $index =>$timer): ?>
+                <?php foreach ($entries as $index => $timer): ?>
                     <?php 
                         $title = htmlspecialchars($timer['disp_title'] ?? ($timer['title']['ger'] ?? ($timer['title'] ?? 'Aufnahme')));
-                        $subtitle = htmlspecialchars($timer['disp_extratext'] ?? ($timer['disp_subtitle'] ?? ($timer['extra'] ?? ($timer['subtitle'] ?? ''))));$rawDesc = !empty($timer['comment']) ?$timer['comment'] : (!empty($timer['disp_description']) ?$timer['disp_description'] : ($timer['description'] ?? ''));$description = htmlspecialchars($rawDesc);$channel = htmlspecialchars($timer['channelname'] ?? ($timer['channel_name'] ?? 'Kanal'));
+                        $subtitle = htmlspecialchars($timer['disp_extratext'] ?? ($timer['disp_subtitle'] ?? ($timer['extra'] ?? ($timer['subtitle'] ?? ''))));
+                        $rawDesc = !empty($timer['comment']) ? $timer['comment'] : (!empty($timer['disp_description']) ? $timer['disp_description'] : ($timer['description'] ?? ''));
+                        $description = htmlspecialchars($rawDesc);
+                        $channel = htmlspecialchars($timer['channelname'] ?? ($timer['channel_name'] ?? 'Kanal'));
                         
                         $startTimestamp = (int)($timer['start'] ?? 0);
                         $stopTimestamp  = (int)($timer['stop'] ?? 0);
 
-                        $dateStr   = date('d.m.Y', $startTimestamp);$startTime = date('H:i', $startTimestamp);$stopTime  = ($stopTimestamp > 0) ? date('H:i', $stopTimestamp) : '--:--';
+                        $dateStr   = date('d.m.Y', $startTimestamp);
+                        $startTime = date('H:i', $startTimestamp);
+                        $stopTime  = ($stopTimestamp > 0) ? date('H:i', $stopTimestamp) : '--:--';
 
                         $uuid = $timer['uuid'] ?? (string)$index;
 
@@ -72,10 +79,9 @@ for ($i = 0; $i < $count; $i++) {
                         $isRecording = ($statusRaw === 'recording') || ($startTimestamp <= $now && $stopTimestamp > $now);
                         $isOverlap = isset($overlappingUuids[$uuid]);
 
-
                         $rowClasses = [];
-                        if ($isRecording)$rowClasses[] = 'is-recording';
-                        if ($isOverlap)$rowClasses[] = 'is-overlap';
+                        if ($isRecording) $rowClasses[] = 'is-recording';
+                        if ($isOverlap) $rowClasses[] = 'is-overlap';
                     ?>
                     <tr id="row-<?= htmlspecialchars($uuid) ?>" class="<?= implode(' ', $rowClasses) ?>">
                         <td>
@@ -94,7 +100,7 @@ for ($i = 0; $i < $count; $i++) {
                             <?php if ($subtitle): ?>
                                 <div class="subtitle-cell"><?= $subtitle ?></div>
                             <?php endif; ?>
-                            <?php if ($description && $description !==$subtitle): ?>
+                            <?php if ($description && $description !== $subtitle): ?>
                                 <div class="description-cell"><?= $description ?></div>
                             <?php endif; ?>
                         </td>
@@ -141,9 +147,25 @@ function handleDeleteTimer(btn) {
 
     fetch('edit/record_delete.php', {
         method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
         body: formData
     })
-    .then(res => res.json())
+    .then(async res => {
+        // Falls der Server ein Redirect liefert oder die Antwort kein reines JSON ist
+        const text = await res.text();
+        try {
+            return JSON.parse(text);
+        } catch (e) {
+            // Falls record_delete.php noch per 302 umleitet, aber der Löschvorgang erfolgreich war:
+            if (res.ok || res.redirected) {
+                return { success: true };
+            }
+            throw new Error('Ungültige Serverantwort: ' + text.substring(0, 100));
+        }
+    })
     .then(data => {
         if (data.success) {
             const row = document.getElementById('row-' + uuid);
@@ -156,7 +178,7 @@ function handleDeleteTimer(btn) {
                     const tbody = document.getElementById('upcomingTableBody');
                     if (tbody && tbody.querySelectorAll('tr').length === 0) {
                         tbody.innerHTML = `
-                            <tr>
+                            <tr id="row-empty">
                                 <td colspan="4" style="text-align: center; padding: 25px; color: #777;">
                                     Aktuell keine geplante Aufnahmen vorhanden.
                                 </td>
@@ -172,7 +194,7 @@ function handleDeleteTimer(btn) {
         }
     })
     .catch(err => {
-        alert('Netzwerk- oder Serverfehler beim Löschen.');
+        alert('Netzwerk- oder Serverfehler beim Löschen: ' + err.message);
         console.error(err);
         btn.disabled = false;
         btn.style.opacity = '1';
